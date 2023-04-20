@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Python Games with Processing</title>
-</head>
 <body>
 	<h1>Python Games with Processing</h1>
 	<p>This repository contains a collection of simple games built using Python and Processing. These games were created as part of a course project to learn more about game development and the Processing library.</p>
@@ -15,7 +12,7 @@
 	<h2>Games</h2>
 	<p>This repository contains the following games:</p>
 	<ul>
-		<li>Mine Sweeper_</li>
+		<li>Mine Sweeper</li>
 		<li>Asteroids</li>
 		<li>Checkers</li>
 	</ul>
