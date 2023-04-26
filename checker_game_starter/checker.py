@@ -49,12 +49,11 @@ class Checkers:
         ellipse(mouseX, mouseY, self.size * 0.6, self.size * 0.6)
         strokeWeight(0)
 
-        # if self.is_king:
-        #     self.be_king(mouseX, mouseY)
+        if self.is_king:
+            self.be_king(mouseX, mouseY)
 
     def mouse_on(self):
         """Check if mouse is on the checker"""
-        
         x = mouseX - self.x * self.size - self.size // 2
         y = mouseY - self.y * self.size - self.size // 2
         return sqrt(x ** 2 + y ** 2) < self.size * 0.5
@@ -70,3 +69,5 @@ class Checkers:
         self.x = x
         self.y = y
         self.is_dragged = False
+        if y == 0 or y == 7 and not self.is_king:
+            self.is_king = True

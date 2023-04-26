@@ -18,24 +18,24 @@ class GameController:
         self.has_jump = False
         self.PAUSE_TIME = 0.7
         self.last_move_time = 0.0
+        self.game_over = False
+        self.record = False
 
     def start_game(self):
         self.player.initialize()
         self.ai.initialize()
 
     def update(self):
-        print(self.has_jump)
         self.b.set_up()
         if self.has_jump and not self.player.jump_exist():
             self.has_jump = False
             self.player.valid_jump = None
 
         # if player side has a valid jump
-
         for c in self.board:
             if self.player.has_valid_jump(c):
                 self.has_jump = True
-                self.player.only_jump(c)
+                # self.player.only_jump(c)
                 if c.is_dragged:
                     c.display_moving()
                 else:
@@ -45,7 +45,6 @@ class GameController:
 
         if not self.has_jump:
             self.b.set_up()
-        # if no valid jump, that checker valid move
             for c in self.board:
                 if self.player.has_valid_move(c):
                     c.has_valid_move = True
@@ -83,20 +82,40 @@ class GameController:
 
     def player_move(self, c):
         if self.has_jump:
-            for i, j in [(-2, -2), (2, -2)]:
-                if (c.x + i == c.new_x and c.y + j == c.new_y) and self.player.find_checker(c.new_x, c.new_y) == -1:
-                    jumped_x, jumped_y = (
-                        c.x + c.new_x) // 2, (c.y + c.new_y) // 2
-                    jumped = self.player.find_checker(jumped_x, jumped_y)
-                    if jumped != -1 and jumped.color != c.color:
-                        c.move(c.new_x, c.new_y)
-                        self.player.eat_checker(jumped)
-                        self.has_jump = False
-                        self.player_turn = False
-                        self.last_move_time = time.time()
-        else:
+            if c.is_king:
+                for i, j in [(2, 2), (-2, -2), (2, -2), (-2, 2)]:
+                    if (c.x + i == c.new_x and c.y + j == c.new_y) and self.player.find_checker(c.new_x, c.new_y) == -1:
+                        jumped_x, jumped_y = (
+                            c.x + c.new_x) // 2, (c.y + c.new_y) // 2
+                        jumped = self.player.find_checker(jumped_x, jumped_y)
+                        if jumped != -1 and jumped.color != c.color:
+                            c.move(c.new_x, c.new_y)
+                            self.player.eat_checker(jumped)
+                            self.has_jump = False
+                            self.player_turn = False
+                            self.last_move_time = time.time()
+            else:
+                for i, j in [(-2, -2), (2, -2)]:
+                    if (c.x + i == c.new_x and c.y + j == c.new_y) and self.player.find_checker(c.new_x, c.new_y) == -1:
+                        jumped_x, jumped_y = (
+                            c.x + c.new_x) // 2, (c.y + c.new_y) // 2
+                        jumped = self.player.find_checker(jumped_x, jumped_y)
+                        if jumped != -1 and jumped.color != c.color:
+                            c.move(c.new_x, c.new_y)
+                            self.player.eat_checker(jumped)
+                            self.has_jump = False
+                            self.player_turn = False
+                            self.last_move_time = time.time()
+        else:    
             dx, dy = abs(c.new_x - c.last_x), abs(c.new_y - c.last_y)
             if dx == 1 and dy == 1:
+                if c.is_king:
+                    for i, j in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+                        if c.last_x + i == c.new_x and c.last_y + j == c.new_y and self.player.find_checker(c.new_x, c.new_y) == -1:
+                            c.move(c.new_x, c.new_y)
+                            self.last_move_time = time.time()
+                            self.player_turn = False
+                        
                 for i, j in [(-1, -1), (1, -1)]:
                     if c.last_x + i == c.new_x and c.last_y + j == c.new_y and self.player.find_checker(c.new_x, c.new_y) == -1:
                         c.move(c.new_x, c.new_y)
@@ -115,3 +134,52 @@ class GameController:
                     self.ai.move(c)
                     self.player_turn = True
                     return
+
+    def display_end_game(self):
+        TEXT_SIZE = 120
+        if self.game_over == "lose":
+            message = "Red wins!"
+        elif self.game_over == "win":
+            message = "Black wins!"
+        elif self.game_over == "draw":
+            message = "Draw!"
+
+        CENTER = self.b.size * self.b.size // 2
+        OFFSET = 3
+        textSize(TEXT_SIZE)
+        textAlign(CENTER, CENTER)
+        fill(0)
+        text(message, CENTER+OFFSET, CENTER+OFFSET)
+        fill(225)
+        text(message, CENTER, CENTER)
+        self.record_winner()
+
+    def record_winner(self):
+        if not self.record and self.game_over == "win":
+            ranking = {}
+            try:
+                file = open("score.txt", "r+")
+            except OSError as e:
+                print("Cannot open score.txt")
+
+            for line in file:
+                if line == "\n":
+                    continue
+                line = line.split()
+                name = line[0]
+                score = int(line[1])
+                ranking[name] = score
+
+            winner = self.input("Enter name: ")
+            ranking[winner] = ranking.get(winner, 0) + 1
+            ranking = sorted(ranking.items(), key=lambda x: x[1], reverse=True)
+            file.seek(0)
+            
+            for name, score in ranking:
+                file.write(name + " " + str(score) + "\n")
+        self.record = True
+        
+
+    def input(self, message=''):
+        from javax.swing import JOptionPane
+        return JOptionPane.showInputDialog(frame, message)
